@@ -2,7 +2,7 @@
 
 name="adhocAtSecil"
 ip="192.168.2.1/24"
-channel=4
+channel=6
 interface="wlan0"
 ssid="atsecilthebest"
 
@@ -22,8 +22,7 @@ sudo nmcli connection delete "$name" 2>/dev/null
 echo "Création du réseau Ad-hoc ($ssid)..."
 sudo nmcli connection add type wifi ifname "$interface" con-name "$name" \
     ssid "$ssid" mode adhoc wifi.band bg wifi.channel "$channel" \
-    ipv4.addresses "$ip" ipv4.method manual connection.autoconnect no \
-    802-11-wireless-security.key-mgmt none 802-11-wireless-security.auth-alg open
+    ipv4.addresses "$ip" ipv4.method manual connection.autoconnect no
 
 echo "Réactivation du Wi-Fi..."
 sudo rfkill unblock wifi
