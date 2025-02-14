@@ -8,6 +8,6 @@ MASK=16
 sudo nmcli connection delete ethStatic
 
 # création profil ethernet (ethStatic)
-sudo nmcli connection add type ethernet ifname eth0 con-name ethStatic ipv4.addresses $(IP)/$(MASK) ipv4.method manual connection.autoconnect yes
+sudo nmcli connection add type ethernet ifname eth0 con-name ethStatic ipv4.addresses ${IP}/${MASK} ipv4.method manual connection.autoconnect yes
 
 sudo nmcli connection up ethStatic
