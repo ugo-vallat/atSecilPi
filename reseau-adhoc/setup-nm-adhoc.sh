@@ -1,7 +1,7 @@
 #!/bin/bash
 
 name="adhocAtSecil"
-ip="192.168.2.1/24"
+ip="192.168.1.1/24"
 channel=6
 interface="wlan0"
 ssid="atsecilthebest"
@@ -20,6 +20,9 @@ echo "Suppression des anciennes connexions ($name)..."
 sudo nmcli connection delete "$name" 2>/dev/null
 
 echo "Création du réseau Ad-hoc ($ssid)..."
+sudo systemctl start NetworkManager
+sudo ip link set "$interface" up
+sudo systemctl stop wpa_supplicant
 sudo nmcli connection add type wifi ifname "$interface" con-name "$name" \
     ssid "$ssid" mode adhoc wifi.band bg wifi.channel "$channel" \
     ipv4.addresses "$ip" ipv4.method manual connection.autoconnect no
@@ -33,4 +36,5 @@ echo "Lancement de la connexion Ad-hoc ($name)..."
 sudo nmcli connection up "$name"
 
 echo "Réseau Ad-hoc '$ssid' actif avec IP $ip sur $interface."
+nmcli device show "$interface"
 
