@@ -1,14 +1,18 @@
 #!/bin/bash
 
-IP="192.168.1.2"
+if [[ -z "$1" || "$1" -lt 1 || "$1" -gt 255 ]]; then
+  echo "Usage: $0 <ID (1-255)>"
+  exit 1
+fi
+
+ID=$1
+IP="192.168.1.${ID}"
 MASK="255.255.255.0"
 SSID="atsecilthebest"
 CHANNEL=4
 
 # Désactiver le service DHCP pour éviter les conflits
 sudo systemctl stop NetworkManager
-# sudo systemctl stop dhcpcd
-# sudo systemctl disable dhcpcd
 
 # Configurer l'interface WiFi en mode Adhoc
 sudo ip link set wlan0 down  # Désactiver temporairement l'interface
@@ -28,7 +32,5 @@ ifconfig wlan0
 # echo -e "interface wlan0\nstatic ip_address=$IP/24\nnohook wpa_supplicant" | sudo tee -a /etc/dhcpcd.conf
 
 # Redémarrer le service réseau pour appliquer les modifications
-# sudo systemctl restart networking
-# sudo systemctl restart dhcpcd
 
-echo "Configuration Adhoc terminée. Vérifiez avec 'iwconfig' et 'ifconfig'."
+echo "Config Done"
