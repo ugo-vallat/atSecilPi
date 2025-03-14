@@ -3,9 +3,8 @@ import socket
 import json
 import argparse
 import subprocess
-import errno
 
-file_directory_path = "./received_instructions/"
+file_directory_path = "./received_inst/"
 
 def get_file_infos(clientsocket):
     data = ''
@@ -18,7 +17,7 @@ def get_file_infos(clientsocket):
 def write_file(clientsocket, file_name, file_size):
     
     try : 
-        subprocess.check_call("sudo chmod 777 " + file_size)
+        subprocess.check_call("chmod 777 " + file_name, shell=True)
         with open(file_directory_path + file_name, "wb") as new_file :
             while True:
                 tmp = clientsocket.recv(min(file_size, 1024))
@@ -26,12 +25,10 @@ def write_file(clientsocket, file_name, file_size):
                     break
                 new_file.write(tmp)
     except subprocess.CalledProcessError as e:
-        print(e.returncode)
+        print(e.returncode, flush=True)
         if e.returncode == 126 :
-            print("No right to give execution mode on file. Be sure to be in sudo mode"
-            print("the file could not be recieved")
-
-
+            print("No permission to give execution mode on file. Be sure to be in sudo mode")
+            print("The file could not be received")
 
 
 def send_ack(distant_ip, distant_port, ack):
@@ -59,8 +56,6 @@ def execute_command(command):
         if e.returncode == 127 : 
             print("be sure that the file on server side is located inside the directory " + file_directory_path + " in the command.")
     
-
-
 
 
 def listening_loop(local_port):
@@ -98,4 +93,4 @@ def parse_args():
     listening_loop(local_port)
 
 
-parse_args()  
+parse_args()

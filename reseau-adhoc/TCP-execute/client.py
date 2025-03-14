@@ -72,9 +72,7 @@ def parse_file(file):
     global local_port
 
     file_to_send = file
-    local_ip = "192.168.1.2"
     local_port = 9000 + os.getpid()%1000
-    print("local_port = ", local_port)
 
     try : 
         file_size = os.path.getsize(file_to_send)
@@ -95,14 +93,17 @@ def parse_command(command):
 def parse_args():
     global distant_ip
     global distant_port
+    global local_ip
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('local_ip', type=str)
     parser.add_argument('distant_ip', type=str)
     parser.add_argument('distant_port', type=int)
     parser.add_argument('-c', '--command', nargs='+', type=str, metavar=('command'))
     parser.add_argument('-f', '--file', type=str, metavar=('file_path'))
 
     args = parser.parse_args()
+    local_ip = args.local_ip
     distant_ip = args.distant_ip
     distant_port = args.distant_port
 
