@@ -72,7 +72,7 @@ def parse_file(file):
     global local_port
 
     file_to_send = file
-    local_ip = "localhost"
+    local_ip = "192.168.1.2"
     local_port = 9000 + os.getpid()%1000
     print("local_port = ", local_port)
 
@@ -113,4 +113,4 @@ def parse_args():
         parse_command(args.command)
 
 
-parse_args()  
+parse_args()

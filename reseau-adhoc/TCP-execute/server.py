@@ -3,9 +3,7 @@ import socket
 import json
 import argparse
 import subprocess
-
-local_ip = sys.argv[1]
-local_port = int(sys.argv[2])
+import errno
 
 file_directory_path = "./received_instructions/"
 
@@ -19,12 +17,21 @@ def get_file_infos(clientsocket):
 
 def write_file(clientsocket, file_name, file_size):
     
-    with open(file_directory_path + file_name, "wb") as new_file :
-        while True:
-            tmp = clientsocket.recv(min(file_size, 1024))
-            if tmp == b'':
-                break
-            new_file.write(tmp)
+    try : 
+        subprocess.check_call("sudo chmod 777 " + file_size)
+        with open(file_directory_path + file_name, "wb") as new_file :
+            while True:
+                tmp = clientsocket.recv(min(file_size, 1024))
+                if tmp == b'':
+                    break
+                new_file.write(tmp)
+    except subprocess.CalledProcessError as e:
+        print(e.returncode)
+        if e.returncode == 126 :
+            print("No right to give execution mode on file. Be sure to be in sudo mode"
+            print("the file could not be recieved")
+
+
 
 
 def send_ack(distant_ip, distant_port, ack):
@@ -45,9 +52,18 @@ def receive_file(clientsocket, distant_ip, distant_port, file_name, file_size):
 
 def execute_command(command):
     print("-- Executing command : " + command)
-    subprocess.Popen(command, shell=True)
+    try : #before: Popen(command, shell=True)
+        subprocess.check_call(command, shell=True)
+        print("command executed successfully !")
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 127 : 
+            print("be sure that the file on server side is located inside the directory " + file_directory_path + " in the command.")
+    
 
-def listening_loop():
+
+
+
+def listening_loop(local_port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serversocket:
             serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serversocket.bind(('', local_port))
@@ -72,17 +88,14 @@ def listening_loop():
 
 
 def parse_args():
-    global local_ip
     global local_port
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('local_ip', type=str)
     parser.add_argument('local_port', type=int)
     args = parser.parse_args()
-    local_ip = args.local_ip
     local_port = args.local_port
 
-    listening_loop()
+    listening_loop(local_port)
 
 
 parse_args()  
