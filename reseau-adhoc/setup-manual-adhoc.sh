@@ -12,7 +12,11 @@ SSID="atsecilthebest"
 CHANNEL=4
 
 # Désactiver le service DHCP pour éviter les conflits
-sudo systemctl stop NetworkManager
+## V1 : Stop NetworkManager
+sudo systemctl stop NetworkManager    
+
+## V2 : Unmanage wlan0 for NetworkManager
+# sudo nmcli dev set wlan0 managed no
 
 # Configurer l'interface WiFi en mode Adhoc
 sudo ip link set wlan0 down  # Désactiver temporairement l'interface
