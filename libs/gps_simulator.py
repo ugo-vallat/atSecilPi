@@ -8,6 +8,7 @@ from log import *
 from libgps import *
 
 
+
 def _init_simulator():
     # --- 1. Lancer socat pour créer deux pty connectés ---
     printl("Lancement de socat...")
@@ -65,7 +66,7 @@ def _send_data(socat_proc, write_port):
                 for coord in pos :
                     gga = gps_coord_to_gga(2,coord[0], coord[1], coord[2])
                     ser.write(gga.encode())
-                    printl(f"send {gga}")
+                    # printl(f"send {gga}")
                     time.sleep(1)
     finally:
         printl("Fermeture de socat...")

@@ -1,5 +1,7 @@
 import inspect
 
+PRINT_LOG = False
+
 CRED = "\033[38;5;196m"
 CGREEN = "\033[38;5;46m"
 
@@ -20,13 +22,15 @@ def get_caller():
     return None
 
 def printl(msg):
-    print(f"[{get_caller()}]<INFO> : {msg}")
+    global PRINT_LOG
+    if PRINT_LOG:
+        print(f"[{get_caller()}]<INFO> : {msg}", flush=True)
 
 def warnl(msg):
     global CWARN
-    print(f"{CWARN}[{get_caller()}]<WARN> : {msg}{CRST}")
+    print(f"{CWARN}[{get_caller()}]<WARN> : {msg}{CRST}", flush=True)
 
 def exitl(msg):
     global CERROR
-    print(f"{CERROR}[{get_caller()}]<ERROR> : {msg}{CRST}")
+    print(f"{CERROR}[{get_caller()}]<ERROR> : {msg}{CRST}", flush=True)
     exit(1)

@@ -1,6 +1,8 @@
 import serial.tools.list_ports
 import serial
 from datetime import datetime
+import json
+
 from log import *
 
 #________________________________ GPS DEVICE ________________________________
