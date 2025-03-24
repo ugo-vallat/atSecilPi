@@ -15,9 +15,9 @@ class AdhocNetwork:
         else :
             if not (1 <= id <= 255):
                 exitl(f"invalid id : {id}")
-            self._IP = f"192.168.1.{id}"
+            self._IP = f"192.168.2.{id}"
             self._MASK = "255.255.255.0"
-            self._BROADCAST = "192.168.1.255"
+            self._BROADCAST = "192.168.2.255"
 
         self._PORT = 5555
         self._SSID = "atsecilthebest"

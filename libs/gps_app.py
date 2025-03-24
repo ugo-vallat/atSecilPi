@@ -12,7 +12,7 @@ import log
 
 # -------- GLOBAL VARIABLES -------- 
 
-log.PRINT_LOG = False
+log.PRINT_LOG = True
 
 
 class Mode(Enum):
@@ -76,6 +76,8 @@ else:
     exitl(usage())
 
 network = AdhocNetwork(id=ID, local_host=(MODE == Mode.LOCAL_HOST))
+if MODE == Mode.PI :
+    network.setup_adhoc()
 buffer = queue.Queue()
 
 p_gps_simulator = threading.Thread(target=gps_simulator)
