@@ -6,9 +6,10 @@ from log import *
 
 
 class AdhocNetwork:
-    def __init__(self, id=1, local_host=False) :
+    def __init__(self, id=1, localhost=False) :
         # netwrok
-        if local_host:
+        self.localhost = localhost
+        if localhost:
             self._IP = f"127.0.0.1"
             self._MASK = "255.0.0.0"
             self._BROADCAST = "127.255.255.255"
@@ -33,6 +34,9 @@ class AdhocNetwork:
         subprocess.run(cmd, shell=True, check=True)
 
     def setup_adhoc(self):
+        if self.localhost :
+            printl("Network in localhost mode, ignore setup_hadoc")
+            return
         try:
             # Stop NetworkManager
             self._run_cmd("sudo systemctl stop NetworkManager")
