@@ -57,24 +57,16 @@ def print_grid(grid):
 
 def clear_plot():
     global grid
-    for _ in range(SIZE+4):
+    for _ in range(SIZE+5):
         print("\033[F", end='')
         print("\033[K", end='')
 
     grid = create_grid()
 
-# Initialize the grid
 grid = create_grid()
-
-
-
-# Example: Place an 'O' at (4, 5)
 
 def place_marker(grid, row, col, color, marker="O",):
     grid[row][col] = rgb_color(color, marker)
-
-# Print the grid
-print_grid(grid)
 
 
 def display(fix, lat, lon, altitude):
@@ -112,11 +104,11 @@ def display(fix, lat, lon, altitude):
 
 def adhoc_receiver(network:AdhocNetwork):
     printl("start...")
+    print_grid(grid)
     while True:
         pos = network.read_data()
         (fix, lat, lon, altitude) = json.loads(pos) # (fix, lat, lon, altitude)
         pos = (fix, lat, lon, altitude)
-        print(f"[gps_app.adhoc_receiver] received pos \t : {pos}")
         display(fix, lat, lon, altitude)
 
 
