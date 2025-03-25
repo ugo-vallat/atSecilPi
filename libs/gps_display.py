@@ -40,11 +40,11 @@ def display(fix, lat, lon, altitude):
         scatter_plot.set_offsets(offset)
 
         colors = scatter_plot.get_facecolors()
+        colors = np.append(colors, [rainbow_colors[int(altitude*10)]], axis=0)
 
-        print("rainbow_colors[altitude] ", rainbow_colors[int(altitude*10)])
-        colors = np.append(colors, rainbow_colors[int(altitude*10)])
-        print("colors = ", colors)
-    
+        while np.shape(colors)[0] > np.shape(offset)[0]:
+            colors = np.delete(colors, 0, axis=0)
+
         scatter_plot.set_facecolor(colors)
 
         scatter_plot.changed()
