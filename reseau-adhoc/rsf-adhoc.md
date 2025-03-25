@@ -34,43 +34,56 @@
 ## Mise en place
 
 ### Sans NetworkManager
-```bash
-#!/bin/bash
+voir `setup-manual-adhoc.sh`
 
-SSID="atsecilthebest"
-CHANNEL=4
-IP="192.168.1.2"
-MASK="255.255.255.0"
+### Avec NetworkManager  
 
-# Désactiver le service DHCP pour éviter les conflits
-sudo systemctl stop NetworkManager
-sudo systemctl stop dhcpcd
-sudo systemctl disable dhcpcd
+#### Documentation  
+WPA Supplicant config file explanations : https://gist.github.com/penguinpowernz/ce4ed0e64ce0fa99a5e335c1a4c954b3
 
-# Configurer l'interface WiFi en mode Adhoc
-sudo ip link set wlan0 down  # Désactiver temporairement l'interface
-sudo iwconfig wlan0 mode ad-hoc  # Passer en mode Adhoc
-sudo iwconfig wlan0 essid $(SSID)  # Définir le SSID
-sudo iwconfig wlan0 channel $(CHANNEL)  # Définir le canal 4 (2.427 GHz)
-sudo ip link set wlan0 up  # Réactiver l'interface
+```
+# mode: IEEE 802.11 operation mode
+# 0 = infrastructure (Managed) mode, i.e., associate with an AP (default)
+# 1 = IBSS (ad-hoc, peer-to-peer)
+# 2 = AP (access point)
+# Note: IBSS can only be used with key_mgmt NONE (plaintext and static WEP) and
+# WPA-PSK (with proto=RSN). In addition, key_mgmt=WPA-NONE (fixed group key
+# TKIP/CCMP) is available for backwards compatibility, but its use is
+# deprecated. WPA-None requires following network block options:
+# proto=WPA, key_mgmt=WPA-NONE, pairwise=NONE, group=TKIP (or CCMP, but not
+# both), and psk must also be set.
 
-# Assigner une adresse IP statique
-sudo ifconfig wlan0 $(IP) netmask $(MASK) up
 
-# Vérifier la configuration du WiFi
-iwconfig wlan0
-ifconfig wlan0
 
-# Activer le service réseau pour appliquer la configuration au redémarrage
-echo -e "interface wlan0\nstatic ip_address=XXX.XXX.XXX.1/24\nnohook wpa_supplicant" | sudo tee -a /etc/dhcpcd.conf
 
-# Redémarrer le service réseau pour appliquer les modifications
-sudo systemctl restart networking
-sudo systemctl restart dhcpcd
-
-echo "Configuration Adhoc terminée. Vérifiez avec 'iwconfig' et 'ifconfig'."
 
 ```
 
-### Avec NetworkManager  
-voir setup-nm-adhoc.sh
+#### Trucs à pas faire  
+
+- WPA-NONE is deprecated !!
+- key-mgmt none (utilise uniquement channel 36)
+
+#### Code  
+voir `setup-nm-adhoc.sh`
+
+```/etc/wpa_supplicant-adhoc.conf
+ctrl_interface=DIR=/run/wpa_supplicant GROUP=wheel
+
+# use 'ap_scan=2' on all devices connected to the network
+# this is unnecessary if you only want the network to be created when no other networks are available
+# ap_scan=2
+
+network={
+    ssid="adhocAtSecil"
+    mode=1
+    frequency=2427
+    proto=RSN
+    key_mgmt=WPA-PSK
+    pairwise=CCMP
+    group=CCMP
+    psk="12345678"
+}
+```
+
+puis `wpa_supplicant -B -i interface -c /etc/wpa_supplicant-adhoc.conf -D nl80211,wext`
