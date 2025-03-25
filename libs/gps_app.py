@@ -59,6 +59,7 @@ def adhoc_receiver(network:AdhocNetwork):
         (fix, lat, lon, altitude) = json.loads(pos) # (fix, lat, lon, altitude)
         pos = (fix, lat, lon, altitude)
         print(f"[gps_app.adhoc_receiver] received pos \t : {pos}")
+        display(fix, lat, lon, altitude)
 
 
 def usage():
@@ -83,15 +84,14 @@ buffer = queue.Queue()
 p_gps_simulator = threading.Thread(target=gps_simulator)
 p_gps_handler = threading.Thread(target=gps_handler, args=(buffer,))
 p_adhoc_sender = threading.Thread(target=adhoc_sender, args=(network,buffer,))
-p_adhoc_receiver = threading.Thread(target=adhoc_receiver, args=(network,))
+#p_adhoc_receiver = threading.Thread(target=adhoc_receiver, args=(network,))
 
 
 p_gps_simulator.start()
 sleep(1)
 p_gps_handler.start()
 p_adhoc_sender.start()
-p_adhoc_receiver.start()
-
+#p_adhoc_receiver.start()
 
 
 
