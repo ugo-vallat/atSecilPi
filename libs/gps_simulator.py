@@ -19,6 +19,10 @@ def _init_simulator():
         text=True,
     )
 
+    time.sleep(0.5)
+    if socat_proc.poll() is not None :
+        exitl("Failed to run socat (fix : install socat and run in sudo mode)")
+
     # --- 2. Lire les deux ports /dev/pts/N depuis la sortie de socat ---
     ports = []
     while len(ports) < 2:
@@ -60,6 +64,7 @@ def _send_data(socat_proc, write_port):
     pos = pos + [(1.0,float(x),float(x)/2.0) for x in range(9,0,-1)]
 
     try:
+        printl(f"Try ouverture port serie : {write_port}")
         with serial.Serial(write_port, 9600, timeout=1) as ser:
             printl(f"Envoi des trames GPS vers {write_port}...")
             while True:
@@ -68,7 +73,14 @@ def _send_data(socat_proc, write_port):
                     ser.write(gga.encode())
                     # printl(f"send {gga}")
                     time.sleep(1)
+    except serial.SerialException as e:
+        warnl(f"Erreur ouverture port série : {e}")
+    except Exception as e:
+        warnl(f"Erreur inattendue dans _send_data: {e}")
+        import traceback
+        warnl(traceback.format_exc())
     finally:
+        printl(f"socat_proc poll: {socat_proc.poll()}")
         printl("Fermeture de socat...")
         socat_proc.send_signal(signal.SIGINT)
         socat_proc.wait()
