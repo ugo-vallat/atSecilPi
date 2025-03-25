@@ -58,7 +58,7 @@ async fn scan_and_connect(adapter: &Adapter, target_name: &str) -> Result<(), Bo
         let device_name = discovered_device.device.name().unwrap_or_default();
 
         info!(
-            "Found device: '{}' ({})",
+            "Found device: '{}' ({:?})",
             device_name,
             discovered_device.device.id()
         );
