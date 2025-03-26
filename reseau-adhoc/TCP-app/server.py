@@ -1,4 +1,3 @@
-import sys
 import socket
 import json
 import argparse
@@ -24,23 +23,25 @@ def get_file_infos(clientsocket):
 def write_file(clientsocket, client : Client):
     
     try : 
-        subprocess.check_call("chmod 777 " + client.file_name, shell=True) # verify for rasberry
         with open(file_directory_path + client.file_name, "wb") as new_file :
             try : 
                 while True:
                     tmp = clientsocket.recv(min(client.file_size, 1024))
-                    #clientsocket.close()
                     if tmp == b'':
                         break
                     new_file.write(tmp)
+                    #clientsocket.close()
                     client.received_bytes += len(tmp)
             except : 
                 pass
+        subprocess.check_call("chmod 777 " + file_directory_path + client.file_name, shell=True)
     except subprocess.CalledProcessError as e:
         print(e.returncode, flush=True)
         if e.returncode == 126 :
             print("No permission to give execution mode on file. Be sure to be in sudo mode")
             print("The file could not be received")
+        if e.returncode == 125 :
+            print("File " + file_directory_path + client.file_name + " not Found")
 
 def append_file(clientsocket, client : Client):
     
@@ -59,7 +60,7 @@ def append_file(clientsocket, client : Client):
 
 def send_ack(distant_ip, distant_port, ack, received_bytes):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-
+        print("Sending ack to ", distant_ip, " ", distant_port)
         s.connect((distant_ip, distant_port))
 
         data = json.dumps([ack, received_bytes])
@@ -111,7 +112,7 @@ def listening_loop(local_port):
                 print("Waiting for connection requests ...",  flush=True)
                 (clientsocket, address) = serversocket.accept()
 
-                print("---> Connection request received, decoding the connexion data ...")
+                print("---> Request received, decoding the data ...")
                 infos = get_file_infos(clientsocket)
                 match len(infos):
 
