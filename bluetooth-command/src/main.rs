@@ -16,24 +16,18 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Mode {
-    /// Server mode: Wait for a connection from a specific device
     Server {
-        /// Name to advertise the server as
         #[arg(short, long, default_value = "Rust BLE Server")]
         name: String,
 
-        /// Timeout in seconds (0 for indefinite)
         #[arg(short, long, default_value = "0")]
         timeout: u64,
     },
 
-    /// Client mode: Actively scan for and connect to a specific device
     Client {
-        /// Name of the device to connect to
         #[arg(short, long)]
         device_name: String,
 
-        /// Maximum time to scan for the device in seconds
         #[arg(short, long, default_value = "30")]
         scan_timeout: u64,
     },
@@ -41,7 +35,6 @@ enum Mode {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // Set up logging
     use tracing_subscriber::prelude::*;
     use tracing_subscriber::{fmt, EnvFilter};
 

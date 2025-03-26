@@ -15,15 +15,12 @@ pub async fn connect_to_device(
 ) -> Result<(), Box<dyn Error>> {
     info!("Starting client mode, scanning for device: {}", target_name);
 
-    // Initialize Bluetooth
     let session = bluer::Session::new().await?;
     let adapter = session.default_adapter().await?;
 
-    // Enable the adapter
     adapter.set_powered(true).await?;
     info!("Bluetooth adapter {} powered on", adapter.name());
 
-    // Start discovery
     let discovery_filter = bluer::DiscoveryFilter {
         transport: bluer::DiscoveryTransport::Auto,
         ..Default::default()
@@ -32,11 +29,9 @@ pub async fn connect_to_device(
     let _ = adapter.discover_devices().await?;
     info!("Discovery started");
 
-    // Find the device
     let device = find_device(&adapter, target_name, scan_timeout_secs).await?;
     info!("Found device: {} ({})", target_name, device.address());
 
-    // Connect to the device
     info!("Connecting to {}...", target_name);
     if !device.is_connected().await? {
         device.connect().await?;
@@ -45,10 +40,8 @@ pub async fn connect_to_device(
     if device.is_connected().await? {
         info!("Successfully connected to {}", target_name);
 
-        // Interact with the device
         interact_with_device(&device).await?;
 
-        // Disconnect when done
         device.disconnect().await?;
         info!("Disconnected from {}", target_name);
     } else {
@@ -69,10 +62,8 @@ async fn find_device(
     let start_time = Instant::now();
     let timeout = Duration::from_secs(timeout_secs);
 
-    // Subscribe to adapter events
     let mut events = adapter.events().await?;
 
-    // Also check existing devices
     for address in adapter.device_addresses().await? {
         let device = adapter.device(address)?;
         if let Ok(Some(name)) = device.name().await {
@@ -83,9 +74,7 @@ async fn find_device(
         }
     }
 
-    // Wait for device discovery events
     while let Some(event) = events.next().await {
-        // Check timeout
         if start_time.elapsed() > timeout {
             return Err(
                 format!("Scan timeout reached. Device '{}' not found.", target_name).into(),
@@ -95,7 +84,6 @@ async fn find_device(
         if let AdapterEvent::DeviceAdded(addr) = event {
             let device = adapter.device(addr)?;
 
-            // Try to get the device name
             if let Ok(Some(name)) = device.name().await {
                 info!("Discovered device: {} ({})", name, addr);
 
@@ -110,7 +98,6 @@ async fn find_device(
 }
 
 async fn interact_with_device(device: &Device) -> Result<(), Box<dyn Error>> {
-    // Wait for services to be resolved
     info!("Waiting for service discovery...");
     let mut retries = 5;
 
@@ -123,11 +110,9 @@ async fn interact_with_device(device: &Device) -> Result<(), Box<dyn Error>> {
         return Err("Failed to resolve services".into());
     }
 
-    // Get services
     let services = device.services().await?;
     info!("Discovered {} services", services.len());
 
-    // Find our service
     let service_uuid = Uuid::from_str(SERVICE_UUID).unwrap();
     let mut found_service = false;
 
