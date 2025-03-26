@@ -69,14 +69,15 @@ def _send_data(socat_proc, write_port):
     try:
         printl(f"Check if write_port {write_port} exist ? {os.path.exists(write_port)}")
         printl(f"Try ouverture port serie : {write_port}")
-        with serial.Serial(write_port, 9600, timeout=1) as ser:
-            printl(f"Envoi des trames GPS vers {write_port}...")
-            while True:
-                for coord in pos :
-                    gga = gps_coord_to_gga(2,coord[0], coord[1], coord[2])
-                    ser.write(gga.encode())
-                    # printl(f"send {gga}")
-                    time.sleep(1)
+        ser = serial.Serial(write_port, 9600, timeout=1)
+        printl(f"Serial port open : {ser}")
+        printl(f"Envoi des trames GPS vers {write_port}...")
+        while True:
+            for coord in pos :
+                gga = gps_coord_to_gga(2,coord[0], coord[1], coord[2])
+                ser.write(gga.encode())
+                # printl(f"send {gga}")
+                time.sleep(1)
     except serial.SerialException as e:
         warnl(f"Erreur ouverture port série : {e}")
     except Exception as e:
