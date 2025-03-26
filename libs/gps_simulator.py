@@ -45,8 +45,11 @@ def _init_simulator():
     try:
         if os.path.exists(symlink_path) or os.path.islink(symlink_path):
             os.remove(symlink_path)
+        printl(f"Check if {symlink_path} exist ? {os.path.exists(symlink_path)}")
+        printl(f"Create {symlink_path}")   
         subprocess.run(["ln", "-s", read_port, symlink_path], check=True)
-        printl(f"Lien symbolique créé : {symlink_path} → {read_port}")
+        printl(f"Check if {symlink_path} exist ? {os.path.exists(symlink_path)}")
+        printl(f"Lien symbolique créé ? : {symlink_path} → {read_port}")
     except Exception as e:
         warnl(f"Impossible de créer le lien symbolique : {e}")
         socat_proc.terminate()
@@ -64,6 +67,7 @@ def _send_data(socat_proc, write_port):
     pos = pos + [(1.0,float(x),float(x)/2.0) for x in range(9,0,-1)]
 
     try:
+        printl(f"Check if write_port {write_port} exist ? {os.path.exists(write_port)}")
         printl(f"Try ouverture port serie : {write_port}")
         with serial.Serial(write_port, 9600, timeout=1) as ser:
             printl(f"Envoi des trames GPS vers {write_port}...")
