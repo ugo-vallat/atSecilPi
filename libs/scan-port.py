@@ -10,14 +10,14 @@ def list_serial_devices():
     
     gps_device = None
     for port in devices:
-        print("Device :")
-        print(f" - Port : {port.device}\n - Description : {port.description}\n - Identifiant : {port.hwid}")
+        printl("Device :")
+        printl(f" - Port : {port.device}\n - Description : {port.description}\n - Identifiant : {port.hwid}")
 
         if "GPS" in port.description:
-            print(" - GPS = YES")
+            printl(" - GPS = YES")
             gps_device = port.device
         else :
-            print(" - GPS = NO")
+            printl(" - GPS = NO")
 
     return gps_device
 

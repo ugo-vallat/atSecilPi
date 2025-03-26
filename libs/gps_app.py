@@ -6,6 +6,11 @@ import json
 import sys
 from enum import Enum
 
+import matplotlib.cm as cm
+from colorist import ColorRGB
+import numpy as np
+
+
 from libgps import *
 from libnetwork import *
 import log
@@ -29,10 +34,23 @@ APP_MODE = AppMode.LOOPBACK
 NETWORK_MODE = NetworkMode.LOCALHOST
 ID = -1
 log.PRINT_LOG = False
+DISPLAY = False
+
+PATH_SIZE = 5
+TRUE_SIZE = 10
+SIZE = TRUE_SIZE *2
 
 # ___ GLOBAL VAR ___
+## Network
 network = None
 buffer = queue.Queue()
+## Display
+points = []
+colors = []
+grid = []
+rainbow_colors = cm.rainbow(np.linspace(0, 1, 20))
+rainbow_colors = np.delete(rainbow_colors, 3, axis=1 )
+rainbow_colors = 255 * rainbow_colors
 
 #_________________________________ GET ARGS _________________________________
 
@@ -97,11 +115,81 @@ def display_args():
     global APP_MODE
     global NETWORK_MODE
 
-    print(f"APP_MODE : {APP_MODE}")
-    print(f"NETWORK_MODE : {NETWORK_MODE}")
-    print(f"ID : {ID}")
-    print(f"log : {log.PRINT_LOG}")
+    printl(f"APP_MODE : {APP_MODE}")
+    printl(f"NETWORK_MODE : {NETWORK_MODE}")
+    printl(f"ID : {ID}")
+    printl(f"log : {log.PRINT_LOG}")
 
+#__________________________________ DISPLAY __________________________________
+
+def rgb_color(color, text):
+    r, g, b = color.astype(int)
+    real_color = ColorRGB(r, g, b)
+
+    colored_text = f"{real_color}{text}{real_color.OFF}"
+    return colored_text
+
+
+def create_grid():
+    return [[" " for _ in range(SIZE)] for _ in range(SIZE)]
+
+def print_grid(grid):
+    print("       " + "   ".join( str(i+1) for i in range(TRUE_SIZE)))
+    print("    +" + "----" * TRUE_SIZE + "+")
+
+    for i, row in enumerate(grid):
+        i = i+1
+        if i%2 != 0 : 
+            print("    |" + " ".join(row) + " |") 
+        else : 
+            print("{: >3d} |".format(int((i+1)/2)) + " ".join(row) + " |") 
+    print("    +" + "----" * TRUE_SIZE + "+")
+
+def clear_plot():
+    global grid
+    global SIZE
+    for _ in range(SIZE+3):
+        print("\033[F", end='')
+        print("\033[K", end='')
+
+    grid = create_grid()
+
+def place_marker(grid, row, col, color, marker="O",):
+    grid[row][col] = rgb_color(color, marker)
+
+
+def display(fix, lat, lon, altitude):
+    global points
+    global colors
+    global grid
+    global PATH_SIZE
+
+    if(fix > 0):
+        
+        clear_plot()
+
+        points.append((lat, lon))
+        colors.append(rainbow_colors[int(altitude*2)-1])
+
+        if len(points) > PATH_SIZE : 
+            points = list(np.delete(points, 0, axis=0))
+            colors = list(np.delete(colors, 0, axis=0))
+        
+        for i, point in enumerate(points) : 
+            lat =  int(point[0]*2)-1
+            lon = int(point[1]*2)-1
+            color = colors[i]
+            if (i == len(points) -1):
+                place_marker(grid,  lat, lon, color, "@")
+            elif i == len(points) -1 or  i == len(points) -2 :
+                place_marker(grid, lat, lon, color, "O")
+            elif (i == 0) :
+                place_marker(grid, lat, lon, color, ".")
+            else :
+                place_marker(grid, lat, lon, color, "o")
+           
+
+        print_grid(grid)
 
 #________________________________ GPS DEVICE ________________________________
 
@@ -130,36 +218,47 @@ def gps_handler(buffer:queue.Queue):
         printl("[gps_handler] Thread STOP...")
 
 def adhoc_sender(network:AdhocNetwork, buffer:queue.Queue):
+    global APP_MODE
+    global DISPLAY
     try:
         printl("start...")
         while True:
             pos = buffer.get()
-            print(f"[gps_app.adhoc_sender] send pos \t : {pos}")
+            if not DISPLAY:
+                print(f"[gps_app.adhoc_sender] send pos \t : {pos}")
             pos = json.dumps(pos)
             network.broadcast(pos)
     except:
         printl("[adhoc_sender] Thread STOP...")
 
 def adhoc_receiver(network:AdhocNetwork):
+    global grid
+    global DISPLAY
     try:
         printl("start...")
+        if DISPLAY:
+            grid = create_grid()
+            print_grid(grid)
         while True:
             pos = network.read_data()
             (fix, lat, lon, altitude) = json.loads(pos) # (fix, lat, lon, altitude)
             pos = (fix, lat, lon, altitude)
-            print(f"[gps_app.adhoc_receiver] received pos \t : {pos}")
+            printl(f"[gps_app.adhoc_receiver] received pos \t : {pos}")
+            if DISPLAY :
+                display(fix, lat, lon, altitude)
     except:
         printl("[adhoc_receiver] Thread STOP...")
-
 
 #__________________________________ MAIN __________________________________
 
 get_args()
 display_args()
 
+if APP_MODE != AppMode.SENDER and not log.PRINT_LOG :
+    DISPLAY = True
+
 network = AdhocNetwork(id=ID, localhost=(NETWORK_MODE == NetworkMode.LOCALHOST))
 network.setup_adhoc()
-
 
 p_gps_simulator = threading.Thread(target=gps_simulator)
 p_gps_handler = threading.Thread(target=gps_handler, args=(buffer,))
@@ -170,6 +269,7 @@ p_gps_simulator.daemon = True
 p_gps_handler.daemon = True
 p_adhoc_sender.daemon = True
 p_adhoc_receiver.daemon = True
+
 
 
 threads_to_join = []

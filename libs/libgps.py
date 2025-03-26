@@ -16,14 +16,14 @@ def gps_get_device():
     
     gps_device = None
     for port in devices:
-        print("Device :")
-        print(f" - Port : {port.device}\n - Description : {port.description}\n - Identifiant : {port.hwid}")
+        printl("Device :")
+        printl(f" - Port : {port.device}\n - Description : {port.description}\n - Identifiant : {port.hwid}")
 
         if "GPS" in port.description or "GPS" in port.device:
-            print(f" - GPS = {COK}YES{CRST}")
+            printl(f" - GPS = {COK}YES{CRST}")
             gps_device = port.device
         else :
-            print(f" - GPS = {CKO}NO{COK}")
+            printl(f" - GPS = {CKO}NO{COK}")
 
     if gps_device is None:
         exitl("No gps device found")
