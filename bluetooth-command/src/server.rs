@@ -1,23 +1,16 @@
 use bluer::{
     adv::Advertisement,
     gatt::local::{
-        Application, Characteristic, CharacteristicNotify, CharacteristicRead, CharacteristicWrite,
-        Service,
+        characteristic_control, Application, Characteristic, CharacteristicNotify,
+        CharacteristicNotifyMethod, CharacteristicWrite, CharacteristicWriteMethod, Service,
     },
 };
 use std::error::Error;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 use tracing::{info, warn};
-use uuid::Uuid;
 
-use crate::utils;
-
-// Define UUIDs for our service and characteristics
-const SERVICE_UUID: &str = "00001000-0000-1000-8000-00805f9b34fb";
-const READ_CHAR_UUID: &str = "00001001-0000-1000-8000-00805f9b34fb";
-const WRITE_CHAR_UUID: &str = "00001002-0000-1000-8000-00805f9b34fb";
-const NOTIFY_CHAR_UUID: &str = "00001003-0000-1000-8000-00805f9b34fb";
+use crate::constants::*;
 
 pub async fn run_server(name: &str, timeout_secs: u64) -> Result<(), Box<dyn Error>> {
     info!("Starting Bluetooth server with name: {}", name);
@@ -118,47 +111,27 @@ pub async fn run_server(name: &str, timeout_secs: u64) -> Result<(), Box<dyn Err
 }
 
 fn create_gatt_application() -> Application {
+    let (_, char_handle) = characteristic_control();
     Application {
         services: vec![Service {
             uuid: SERVICE_UUID.parse().unwrap(),
             primary: true,
-            characteristics: vec![
-                // Read characteristic
-                Characteristic {
-                    uuid: READ_CHAR_UUID.parse().unwrap(),
-                    read: Some(CharacteristicRead::new(|req| {
-                        Box::pin(async move {
-                            let device = req.device_address();
-                            info!("Read request from {:?}", device);
-
-                            // Return some data
-                            let data = utils::get_current_timestamp().as_bytes().to_vec();
-                            info!("Sending data: {:?}", String::from_utf8_lossy(&data));
-                            Ok(data)
-                        })
-                    })),
+            characteristics: vec![Characteristic {
+                uuid: CHARACTERISTIC_UUID.parse().unwrap(),
+                write: Some(CharacteristicWrite {
+                    write_without_response: true,
+                    method: CharacteristicWriteMethod::Io,
                     ..Default::default()
-                },
-                // Write characteristic
-                Characteristic {
-                    uuid: WRITE_CHAR_UUID.parse().unwrap(),
-                    write: Some(CharacteristicWrite::new(|value, req| {
-                        Box::pin(async move {
-                            let device = req.device_address();
-                            let value_str = String::from_utf8_lossy(&value);
-                            info!("Write request from {:?}: {}", device, value_str);
-                            Ok(())
-                        })
-                    })),
+                }),
+                notify: Some(CharacteristicNotify {
+                    notify: true,
+                    method: CharacteristicNotifyMethod::Io,
                     ..Default::default()
-                },
-                // Notify characteristic
-                Characteristic {
-                    uuid: NOTIFY_CHAR_UUID.parse().unwrap(),
-                    notify: Some(CharacteristicNotify::new()),
-                    ..Default::default()
-                },
-            ],
+                }),
+                control_handle: char_handle,
+                ..Default::default()
+            }],
+            // Read characteristic
             ..Default::default()
         }],
         _non_exhaustive: Default::default(),

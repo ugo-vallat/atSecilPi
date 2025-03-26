@@ -1,4 +1,5 @@
 mod client;
+mod constants;
 mod server;
 mod utils;
 
@@ -69,4 +70,3 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
