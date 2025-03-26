@@ -82,7 +82,7 @@ def get_args():
             elif value == "false":
                 log.PRINT_LOG = False
             else:
-                exitl(f"invalid value for log")
+                exitl(f"invalid value for network mode : {value}")
         else :
             exitl(f"invalid flag : {opt}")
     

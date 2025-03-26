@@ -37,4 +37,3 @@ sudo nmcli connection up "$name"
 
 echo "Réseau Ad-hoc '$ssid' actif avec IP $ip sur $interface."
 nmcli device show "$interface"
-
