@@ -115,13 +115,23 @@ class AdhocNetwork:
         Retourne une liste de tuples : (nombre_reseaux, channel)
         """
         # Scan complet des réseaux visibles
-        result = subprocess.run(
-            ["sudo","iwlist",self._INTERFACE,"scan"],
-            capture_output=True,
-            text=True
+        # result = subprocess.run(
+        #     ["sudo","iwlist",self._INTERFACE,"scan"],
+        #     capture_output=True,
+        #     text=True
+        # )
+        proc = subprocess.Popen(
+            ["iwlist", self._INTERFACE, "scan"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
         )
+        out, err = proc.communicate()
+
+
         sleep(5)
-        scan_output = result.stdout
+        scan_output = out
+        printl(f"Scan err : {err}")
         printl(f"Scan output : {scan_output}")
         channel_counts = []
 
