@@ -1,10 +1,8 @@
 import sys
 import subprocess
 import socket
-import re
-from collections import defaultdict
-
-from log import *
+from time import sleep
+from libs.log import *
 
 
 class AdhocNetwork:
@@ -101,7 +99,7 @@ class AdhocNetwork:
         channels = []
         for line in result.stdout.splitlines():
             line = line.strip()
-            if line.startswith("Channel") in line:
+            if line.startswith("Channel") and ":" in line:
                 try:
                     channel = int(line.split()[1])
                     if channel not in channels:
@@ -118,16 +116,17 @@ class AdhocNetwork:
         """
         # Scan complet des réseaux visibles
         result = subprocess.run(
-            ["iwlist", self._INTERFACE, "scan"],
+            ["sudo","iwlist",self._INTERFACE,"scan"],
             capture_output=True,
             text=True
         )
-
+        sleep(5)
         scan_output = result.stdout
+        printl(f"Scan output : {scan_output}")
         channel_counts = []
 
         for ch in channels:
-            count = scan_output.count(f"Channel {ch}")
+            count = scan_output.count(f"Channel:{ch}")
             channel_counts.append((count,ch))
 
         return channel_counts
@@ -150,6 +149,6 @@ class AdhocNetwork:
         scan_results.sort()
 
         # retourne le premier de la liste
-        return scan_results[0][0]
+        return scan_results[0][1]
 
         

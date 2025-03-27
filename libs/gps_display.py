@@ -1,12 +1,12 @@
 import numpy as np
-from gps_simulator import *
+from libs.gps_simulator import *
 from enum import Enum
 import matplotlib.cm as cm
 from colorist import ColorRGB
 
 
-from libgps import *
-from libnetwork import *
+from libs.libgps import *
+from libs.libnetwork import *
 
 
 

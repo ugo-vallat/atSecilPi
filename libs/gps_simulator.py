@@ -4,8 +4,8 @@ import subprocess
 import re
 import os
 import signal
-from log import *
-from libgps import *
+from libs.log import *
+from libs.libgps import *
 
 
 

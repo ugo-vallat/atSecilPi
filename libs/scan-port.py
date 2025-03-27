@@ -1,5 +1,5 @@
 import serial.tools.list_ports
-from log import *
+from libs.log import *
 
 def list_serial_devices():
     """Liste tous les périphériques série connectés et tente d'identifier un module GPS."""

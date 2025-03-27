@@ -1,4 +1,4 @@
-from gps_simulator import *
+from libs.gps_simulator import *
 from time import sleep
 import threading
 import queue
@@ -11,9 +11,9 @@ from colorist import ColorRGB
 import numpy as np
 
 
-from libgps import *
-from libnetwork import *
-import log
+from libs.libgps import *
+from libs.libnetwork import *
+import libs.log as log
 
 #__________________________________ TYPE DEF __________________________________
 

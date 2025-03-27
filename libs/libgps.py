@@ -3,7 +3,7 @@ import serial
 from datetime import datetime
 import json
 
-from log import *
+from libs.log import *
 
 #________________________________ GPS DEVICE ________________________________
 

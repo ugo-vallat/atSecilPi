@@ -10,7 +10,7 @@ import libs.log as log
 
 # ___ CONFIG VAR ___
 ID = -1
-IS_MASTER=False
+IS_MASTER=None
 log.PRINT_LOG = False
 
 # ___ GLOBAL VAR ___
@@ -64,6 +64,9 @@ def get_args():
         exitl("ID not specified (-i <id>)")
     if not (1 <= ID <= 255):
         exitl(f"invalid ID ({ID}), must be in [1,255]")
+
+    if IS_MASTER is None:
+        exitl("Master mode not specifiede (-m <value>)")
 
 def display_args():
     global ID
