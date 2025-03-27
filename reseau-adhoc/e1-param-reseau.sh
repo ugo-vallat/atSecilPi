@@ -26,7 +26,7 @@ echo -e "\n+--------------------------------------------------+\n"
 
 # Canaux WiFi utilisés
 echo -e "Liste des canaux disponnibles :"
-echo -e "\033[38;5;45m $ \033[0m"
+echo -e "\033[38;5;45m $ iwlist channel \033[0m"
 iwlist  channel
 echo -e "\n+--------------------------------------------------+\n"
 
