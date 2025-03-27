@@ -118,7 +118,7 @@ if IS_MASTER:
     print(f"Send hello to other nodes...")
     network.broadcast(f"Hello from master {ID}")
 else:
-    adhoc_receiver()
+    adhoc_receiver(network=network)
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
     msg = network.read_data()
     print(f"Received message : {msg}")
