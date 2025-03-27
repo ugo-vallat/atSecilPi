@@ -5,8 +5,8 @@ use bluer::{
         CharacteristicNotifyMethod, CharacteristicWrite, CharacteristicWriteMethod, Service,
     },
 };
+use std::error::Error;
 use std::time::{Duration, Instant};
-use std::{error::Error, f64::INFINITY};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
@@ -70,13 +70,7 @@ pub async fn run_server(name: &str, timeout_secs: u64) -> Result<(), Box<dyn Err
     let app_handle = adapter.serve_gatt_application(app_handle).await?;
     info!("GATT application registered");
 
-    if timeout_secs < 0 {
-        timeout_secs = f64::INFINITY;
-        info!("Server will run until it's stopped");
-    } else {
-        info!("Server will run for {} seconds", timeout_secs);
-    }
-
+    info!("Server will run for {} seconds", timeout_secs);
     let start_time = Instant::now();
     while start_time.elapsed() < Duration::from_secs(timeout_secs) {
         sleep(Duration::from_secs(1)).await;

@@ -28,7 +28,7 @@ enum Mode {
         #[arg(short, long)]
         device_name: String,
 
-        #[arg(short, long, default_value = "30")]
+        #[arg(short, long, default_value = "10000")]
         scan_timeout: u64,
     },
 }
