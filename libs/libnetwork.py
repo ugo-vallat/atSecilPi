@@ -114,30 +114,25 @@ class AdhocNetwork:
         Effectue un scan WiFi unique et compte le nombre de réseaux par canal.
         Retourne une liste de tuples : (nombre_reseaux, channel)
         """
-        subprocess.run(["systemctl","stop","wpa_supplicant"])
-        subprocess.run(["ifconfig",self._INTERFACE,"down"])
-        sleep(1)
-        subprocess.run(["sudo","ip","link","set","wlan0","down"])
-        subprocess.run(["iwconfig","wlan0","mode","managed"])
-        subprocess.run(["sudo","ip","link","set","wlan0","up"])
-        sleep(1)
-        subprocess.run(["ifconfig",self._INTERFACE,"up"])
-        sleep(1)
-        # Scan complet des réseaux visibles
-        result = subprocess.run(
-            ["sudo","iwlist",self._INTERFACE,"scan"],
-            capture_output=True,
-            text=True
-        )
 
-        sleep(4)
-        scan_output = result.stdout
+        # Scan complet des réseaux visibles
+        for _ in range(5):
+            printl("Scan network...")
+            result = subprocess.run(
+                ["sudo","iwlist",self._INTERFACE,"scan"],
+                capture_output=True,
+                text=True
+            )
+            if "unavailable" in result.stderr:
+                printl("Network is unavailable, wait 2s before next scan")
+                sleep(2)
+
         printl(f"Scan stderr : {result.stderr}")
-        printl(f"Scan output : {scan_output}")
+        printl(f"Scan output : {result.stdout[30]}")
         channel_counts = []
 
         for ch in channels:
-            count = scan_output.count(f"Channel:{ch}")
+            count = result.stdout.count(f"Channel:{ch}")
             channel_counts.append((count,ch))
 
         return channel_counts
