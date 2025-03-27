@@ -95,7 +95,8 @@ def adhoc_receiver(network:AdhocNetwork):
     try:
         printl("Waiting new channel...")
         msg = network.read_data()
-        (new_channel) = json.loads(msg) # (fix, lat, lon, altitude)
+        (ch) = json.loads(msg) # (fix, lat, lon, altitude)
+        new_channel = int(ch)
         printl(f"Received new channel : {new_channel}")
     except Exception as e:
         printl(f"Failed with {e}")
@@ -119,6 +120,7 @@ if IS_MASTER:
     network.broadcast(f"Hello from master {ID}")
 else:
     adhoc_receiver(network=network)
+    printl("Try connect to new network...")
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
     msg = network.read_data()
     print(f"Received message : {msg}")
