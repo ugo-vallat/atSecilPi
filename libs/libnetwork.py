@@ -114,33 +114,25 @@ class AdhocNetwork:
         Effectue un scan WiFi unique et compte le nombre de réseaux par canal.
         Retourne une liste de tuples : (nombre_reseaux, channel)
         """
+        subprocess.run(["systemctl","stop","wpa_supplicant"])
+        subprocess.run(["ifconfig",self._INTERFACE,"down"])
+        sleep(1)
+        subprocess.run(["sudo","ip","link","set","wlan0","down"])
+        subprocess.run(["iwconfig","wlan0","mode","managed"])
+        subprocess.run(["sudo","ip","link","set","wlan0","up"])
+        sleep(1)
+        subprocess.run(["ifconfig",self._INTERFACE,"up"])
+        sleep(1)
         # Scan complet des réseaux visibles
-        # result = subprocess.run(
-        #     ["sudo","iwlist",self._INTERFACE,"scan"],
-        #     capture_output=True,
-        #     text=True
-        # )
-        subprocess.Popen(["systemctl","stop","wpa_supplicant"])
-        subprocess.Popen(["ifconfig",self._INTERFACE,"down"])
-        sleep(1)
-        subprocess.Popen(["sudo","ip","link","set","wlan0","down"])
-        subprocess.Popen(["iwconfig","wlan0","mode","managed"])
-        subprocess.Popen(["sudo","ip","link","set","wlan0","up"])
-        sleep(1)
-        subprocess.Popen(["ifconfig",self._INTERFACE,"up"])
-        sleep(1)
-        proc = subprocess.Popen(
-            ["sudo","iwlist","wlan0","scan"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True
+        result = subprocess.run(
+            ["sudo","iwlist",self._INTERFACE,"scan"],
+            capture_output=True,
+            text=True
         )
-        out, err = proc.communicate()
 
-
-        sleep(2)
-        scan_output = out
-        printl(f"Scan err : {err}")
+        sleep(4)
+        scan_output = result.stdout
+        printl(f"Scan stderr : {result.stderr}")
         printl(f"Scan output : {scan_output}")
         channel_counts = []
 
@@ -171,3 +163,6 @@ class AdhocNetwork:
         return scan_results[0][1]
 
         
+if __name__ == "__main__":
+    network = AdhocNetwork(1,False)
+    print(network.get_free_channel())
