@@ -126,6 +126,8 @@ class AdhocNetwork:
             if "unavailable" in result.stderr:
                 printl("Network is unavailable, wait 2s before next scan")
                 sleep(2)
+            else :
+                break
 
         printl(f"Scan stderr : {result.stderr}")
         printl(f"Scan output : {result.stdout[30]}")
