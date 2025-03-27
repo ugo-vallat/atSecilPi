@@ -120,8 +120,17 @@ class AdhocNetwork:
         #     capture_output=True,
         #     text=True
         # )
+        subprocess.Popen(["systemctl","stop","wpa_supplicant"])
+        subprocess.Popen(["ifconfig",self._INTERFACE,"down"])
+        sleep(1)
+        subprocess.Popen(["sudo","ip","link","set","wlan0","down"])
+        subprocess.Popen(["iwconfig","wlan0","mode","managed"])
+        subprocess.Popen(["sudo","ip","link","set","wlan0","up"])
+        sleep(1)
+        subprocess.Popen(["ifconfig",self._INTERFACE,"up"])
+        sleep(1)
         proc = subprocess.Popen(
-            ["iwlist", self._INTERFACE, "scan"],
+            ["sudo","iwlist","wlan0","scan"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True
@@ -129,7 +138,7 @@ class AdhocNetwork:
         out, err = proc.communicate()
 
 
-        sleep(5)
+        sleep(2)
         scan_output = out
         printl(f"Scan err : {err}")
         printl(f"Scan output : {scan_output}")
