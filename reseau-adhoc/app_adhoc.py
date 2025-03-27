@@ -115,6 +115,7 @@ if IS_MASTER:
     new_channel = network.get_free_channel()
     adhoc_sender(network=network)
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
+    network.setup_adhoc()
     sleep(1)
     print(f"Send hello to other nodes...")
     network.broadcast(f"Hello from master {ID}")
@@ -122,6 +123,7 @@ else:
     adhoc_receiver(network=network)
     printl("Try connect to new network...")
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
+    network.setup_adhoc()
     msg = network.read_data()
     print(f"Received message : {msg}")
 
