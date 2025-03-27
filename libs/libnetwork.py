@@ -1,12 +1,14 @@
 import sys
 import subprocess
 import socket
+import re
+from collections import defaultdict
 
 from log import *
 
 
 class AdhocNetwork:
-    def __init__(self, id=1, localhost=False) :
+    def __init__(self, id=1, localhost=False, port=5555, ssid="atsecilthebest", channel=1) :
         # netwrok
         self.localhost = localhost
         if localhost:
@@ -20,9 +22,9 @@ class AdhocNetwork:
             self._MASK = "255.255.255.0"
             self._BROADCAST = "192.168.2.255"
 
-        self._PORT = 5555
-        self._SSID = "atsecilthebest"
-        self._CHANNEL = 4
+        self._PORT = port
+        self._SSID = ssid
+        self._CHANNEL = channel
         self._INTERFACE = "wlan0"
         
         # other
@@ -59,6 +61,7 @@ class AdhocNetwork:
 
         except subprocess.CalledProcessError as e:
             exitl(f"erreur commande : {e}")
+    
 
     def broadcast(self, data):
         if isinstance(data, str):
@@ -87,4 +90,66 @@ class AdhocNetwork:
                 warnl(f"Erreur lecture socket : {e}")
                 return None
 
+    def _get_available_channels(self):
+        """Récupère la liste des canaux disponibles avec iwlist channel"""
+        result = subprocess.run(
+            ["iwlist", self._INTERFACE, "channel"],
+            capture_output=True,
+            text=True
+        )
+        
+        channels = []
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if line.startswith("Channel") in line:
+                try:
+                    channel = int(line.split()[1])
+                    if channel not in channels:
+                        channels.append(channel)
+                except ValueError:
+                    continue
 
+        return sorted(channels)
+
+    def _scan_network(self, channels):
+        """
+        Effectue un scan WiFi unique et compte le nombre de réseaux par canal.
+        Retourne une liste de tuples : (nombre_reseaux, channel)
+        """
+        # Scan complet des réseaux visibles
+        result = subprocess.run(
+            ["iwlist", self._INTERFACE, "scan"],
+            capture_output=True,
+            text=True
+        )
+
+        scan_output = result.stdout
+        channel_counts = []
+
+        for ch in channels:
+            count = scan_output.count(f"Channel {ch}")
+            channel_counts.append((count,ch))
+
+        return channel_counts
+
+
+    def get_free_channel(self):
+        """
+        Renvoie le canal disponible avec le moins de réseaux détectés.
+        S'il y a plusieurs canaux ex æquo, retourne le premier dans la liste triée.
+        """
+        available_channels = self._get_available_channels()
+        printl(f"Available channels : {available_channels}")
+        scan_results = self._scan_network(available_channels)
+        printl(f"Scan result (nb_network, channel) : {scan_results}")
+
+        if not scan_results:
+            return None
+
+        # Trie les résultats par nombre de réseaux (croissant), puis par numéro de canal (croissant)
+        scan_results.sort()
+
+        # retourne le premier de la liste
+        return scan_results[0][0]
+
+        
