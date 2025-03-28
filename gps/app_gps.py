@@ -26,13 +26,13 @@ class AppMode(Enum):
     RECEIVER=2
     LOOPBACK=3
 
-
 #_________________________________ VARS _________________________________
 
 # ___ CONFIG VAR ___
 APP_MODE = AppMode.LOOPBACK
 NETWORK_MODE = NetworkMode.LOCALHOST
 ID = -1
+SIMU_GPS = False
 log.PRINT_LOG = False
 DISPLAY = False
 
@@ -58,6 +58,7 @@ def usage():
     usage_text = f"usage : {sys.argv[0]} [agrs][option]\n"
     usage_text += f"\n ARGS :\n"
     usage_text += f" -i <id> \t id of the node in [1,255]\n"
+    usage_text += f" -s <value>\t enable gps simulator [true,false] "
     usage_text += f"\n OPTIONS :\n"
     usage_text += f" -m <mode> \t app mode in [sender, receiver, loopback]\n"
     usage_text += f" -n <mode> \t network mode in [adhoc, localhost]\n"
@@ -68,6 +69,7 @@ def get_args():
     global ID
     global APP_MODE
     global NETWORK_MODE
+    global SIMU_GPS
 
     if (len(sys.argv) % 2) == 0:
         warnl("invalid args")
@@ -101,6 +103,13 @@ def get_args():
                 log.PRINT_LOG = False
             else:
                 exitl(f"invalid value for network mode : {value}")
+        elif opt == "-s":
+            if value == "true":
+                SIMU_GPS = True
+            elif value == "false":
+                SIMU_GPS = False
+            else:
+                exitl(f"invalid value for gps simulator : {value}")
         else :
             exitl(f"invalid flag : {opt}")
     
@@ -254,7 +263,7 @@ def adhoc_receiver(network:AdhocNetwork):
 get_args()
 display_args()
 
-if APP_MODE != AppMode.SENDER and not log.PRINT_LOG :
+if APP_MODE != AppMode.SENDER and not log.PRINT_LOG and SIMU_GPS == True :
     DISPLAY = True
 
 network = AdhocNetwork(id=ID, localhost=(NETWORK_MODE == NetworkMode.LOCALHOST))
@@ -275,12 +284,14 @@ p_adhoc_receiver.daemon = True
 threads_to_join = []
 
 if APP_MODE == AppMode.SENDER :
-    p_gps_simulator.start()
+    if SIMU_GPS:
+        p_gps_simulator.start()
     sleep(1)
     p_gps_handler.start()
     p_adhoc_sender.start()
     
-    threads_to_join.append(p_gps_simulator)
+    if SIMU_GPS:
+        threads_to_join.append(p_gps_simulator)
     threads_to_join.append(p_gps_handler)
     threads_to_join.append(p_adhoc_sender)
 elif APP_MODE == AppMode.RECEIVER :
@@ -288,14 +299,16 @@ elif APP_MODE == AppMode.RECEIVER :
 
     threads_to_join.append(p_adhoc_receiver)
 elif APP_MODE == AppMode.LOOPBACK :
-    p_gps_simulator.start()
+    if SIMU_GPS:
+        p_gps_simulator.start()
     sleep(1)
     p_gps_handler.start()
     p_adhoc_sender.start()
     p_adhoc_receiver.start()
 
+    if SIMU_GPS:
+        threads_to_join.append(p_gps_simulator)
     threads_to_join.append(p_adhoc_receiver) 
-    threads_to_join.append(p_gps_simulator)
     threads_to_join.append(p_gps_handler)
     threads_to_join.append(p_adhoc_sender)
 
