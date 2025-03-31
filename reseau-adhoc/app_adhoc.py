@@ -79,7 +79,7 @@ def display_args():
 def adhoc_sender(network:AdhocNetwork):
     global new_channel
     try:
-        printl(f"Send new channel {new_channel}")
+        print(f"Send new channel {new_channel}...")
         ch = json.dumps(new_channel)
         for _ in range(3):
             network.broadcast(ch)
@@ -93,11 +93,11 @@ def adhoc_sender(network:AdhocNetwork):
 def adhoc_receiver(network:AdhocNetwork):
     global new_channel
     try:
-        printl("Waiting new channel...")
+        print("Waiting new channel...")
         msg = network.read_data()
         (ch) = json.loads(msg) # (fix, lat, lon, altitude)
         new_channel = int(ch)
-        printl(f"Received new channel : {new_channel}")
+        print(f"Received new channel : {new_channel}")
     except Exception as e:
         printl(f"Failed with {e}")
 
@@ -114,6 +114,7 @@ if IS_MASTER:
     print("Scan netwrok...")
     new_channel = network.get_free_channel()
     adhoc_sender(network=network)
+    print(f"Setup new network on channel {new_channel}...")
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
     network.setup_adhoc()
     sleep(1)
@@ -121,9 +122,10 @@ if IS_MASTER:
     network.broadcast(f"Hello from master {ID}")
 else:
     adhoc_receiver(network=network)
-    printl("Try connect to new network...")
+    print(f"Setup new network on channel {new_channel}...")
     network = AdhocNetwork(id=ID, localhost=False, channel=new_channel)
     network.setup_adhoc()
+    print("Waiting message from master...")
     msg = network.read_data()
     print(f"Received message : {msg}")
 
