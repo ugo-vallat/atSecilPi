@@ -17,6 +17,12 @@ fi
 echo -e "\033[38;5;46mOK\033[0m"
 echo -e "\n+--------------------------------------------------+\n"
 
+# Etat de l'interface, adresses et statistaiques de traffic
+echo -e "Etat de l'interface, adresses et statistaiques de traffic de $IFACE :"
+echo -e "\033[38;5;45m $ ifconfig $IFACE\033[0m"
+ifconfig "$IFACE"
+echo -e "\n+--------------------------------------------------+\n"
+
 # Infos générales sur l'interface
 echo -e "État de l'interface $IFACE :"
 echo -e "\033[38;5;45m $ iwconfig $IFACE; iwlist $IFACE channel | grep Current Frequency \033[0m"
@@ -34,12 +40,6 @@ echo -e "\n+--------------------------------------------------+\n"
 echo -e "Scan des canaux wifi :"
 echo -e "\033[38;5;45m $ sudo iwlist $IFACE scan | grep -E Cell|Frequency|Quality|ESSID \033[0m"
 sudo iwlist "$IFACE" scan | grep -E "Cell|Frequency|Quality|ESSID" | sed 's/^[ \t]*//'
-echo -e "\n+--------------------------------------------------+\n"
-
-# Statistiques TX/RX
-echo -e "Statistiques de l'interface :"
-echo -e "\033[38;5;45m $ cat /proc/net/dev \033[0m"
-cat /proc/net/dev 
 echo -e "\n+--------------------------------------------------+\n"
 
 # Taux de perte de paquets
