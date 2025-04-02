@@ -1,3 +1,4 @@
 colorist
 matplotlib
 pyserial
+numpy

@@ -7,28 +7,56 @@
 
 ## Étape 1 (Informations réseau)
 
-Pour voir les informations du réseau :
+Pour voir l'ensemble des informations du réseau :
 
 `./e1-param-reseau.sh`
 
 Les commandes utilisées sont :
 
-- Canaux WiFi utilisés : `iwlist wlan0 channel`
-- Interférences WiFi (Autres réseaux sur le même canal) : `iwlist wlan0 scan | grep -E "Channel|ESSID"`
-- Taux de perte de paquets : `ping -c 10 google.com | grep -oP '\d+(?=% packet loss)'`
+- Interfaces réseau actives : `ip -br address`
+- État de l’interface wifi, adresses IP / Mac et les statistiques de trafic : `ifconfig wlan0`
+- Configuration générale de l’interface wifi : essid, channel, fréquence, qualité du signal… : `iwconfig wlan0`
+- Les channel disponibles : `iwlist wlan0 channel`
+- Liste des tous les réseaux sur chaque channel : `sudo iwlist wlan0 scan`
+- Taux de perte de paquets : `ping -c 10 google.com`
 
 ## Étape 2 (Réseau Ad-Hoc)
 
 Lancement du réseau ad-hoc sur une Raspberry Pi:
 
-`./setup-manual-adhoc.sh`
+`sudo ./setup-manual-adhoc.sh <id>` 
+
+- **id** : id of the node in [1,255]
 
 ### Étape 2Bis (Changement de Canal)
 
 Lancement du changement de canal :
 
-`python3 app_adhoc.py -i <id> -m <is_master> [-l <log_activated>]`
+```bash
+env="env_gps"
 
+# ___________ Seulement la première fois ___________
+# Installer pip si ce n'est pas déjà fait
+apt update
+apt install -y python3-pip python3-venv
+
+# Créer l'environnement virtuel s'il n'existe pas
+python3 -m venv "$env"
+
+# Activer l'environnement virtuel
+source "$env/bin/activate"
+
+# Désinstaller le paquet 'serial' s'il est installé
+pip uninstall -y serial
+
+# Installer les dépendances
+pip install -r ./libs/requirements.txt
+
+# ___________ A chaque fois ___________
+sudo su
+source $env/bin/activate
+sudo supython3 -m reseau-adhoc.app_adhoc -i <id> -m <is_master> [-l <log_activated>]`
+```
 - **id** : id of the node in [1,255]
 - **is_master** : is the master that scan the network [true,false]
 - **log_activated** : enable log of infos [true,false]
@@ -110,30 +138,45 @@ python3 bt_command_relay.py client NOM_APPAREIL NOM_SERVEUR_CIBLE /chemin/vers/r
 
 ### Prérequis
 
-- Avant de lancer l'application GPS , l'utilisateur doit effectuer les commandes suivantes :
-
 ```bash
-sudo su
-source /path/to/env/bin/activate
+env="env_gps"
+
+# ___________ Exécuter ces commandes la première fois ___________
+# Installer pip si ce n'est pas déjà fait
+apt update
+apt install -y python3-pip python3-venv
+
+# Créer l'environnement virtuel s'il n'existe pas
+python3 -m venv "$env"
+
+# Activer l'environnement virtuel
+source "$env/bin/activate"
+
+# Désinstaller le paquet 'serial' s'il est installé
+pip uninstall -y serial
+
+# Installer les dépendances
+pip install -r ./libs/requirements.txt
 ```
-
-- Enfin, si elles ne sont pas encore installées, les bibliothèques pythons requises sont :
-
-- - matplotlib
-- - colorist
-- - numpy
+libs/requirements.txt contient la liste des dépendances pour exécuter le programme.
 
 ### Application GPS
 
-Pour lancer l'application GPS, il faut se placer dans le répertoire source du projet ( atSecilPi ) puis executer la commande suivante :
+Pour lancer l'application GPS, il faut se placer dans le répertoire source du projet ( atSecilPi ) puis executer les commandes suivante :
 
-`python3 -m gps.gps_app -i <id> -s <simulator_enabled> [-m <app_mode>] [-n <network_mode>] [-l <log_enabled>]`
+```bash
+env="env_gps"
 
+sudo su
+source $env/bin/activate
+python3 -m gps.gps_app -i <id> -s <simulator_enabled> [-m <app_mode>] [-n <network_mode>] [-l <log_enabled>] [-d <display_enabled>]
+```
 - **id** : id of the node in [1, 255]
 - **simulator_enabled** : enable gps simulator [true, false]
 - **app_mode** : app mode in [sender, receiver, loopback]
 - **network_mode** : network mode in [adhoc, localhost]
-- **log_enabled** : le nom du fichier à transmettre.
+- **log_enabled** : le nom du fichier à transmettre (incompatible avec -d true)
+- **display_enabled** : activer l'affichage des données GPS sur une carte (seulement si données simulées = sender en mode -s true)
 
 # Config ssh
 
@@ -155,6 +198,6 @@ sudo systemctl start avahi-daemon
 
 1. Connecter par ethernet l'ordinateur(Ord) et la raspberry(Rpi)
 2. Récupérer adresse ip/mask de Ord (ifconfig ou ipconfig)
-3. Compléter le script ethernet/setup-ethernet-conf.sh (le nom de réseau doit être identique pour Ord et Rpi)
+3. Compléter le script `ethernet/setup-ethernet-conf.sh` (le nom de réseau doit être identique pour Ord et Rpi)
 4. lancer le script sur Rpi
 
