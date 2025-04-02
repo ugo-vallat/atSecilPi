@@ -6,7 +6,7 @@ from libs.log import *
 
 
 class AdhocNetwork:
-    def __init__(self, id=1, localhost=False, port=5555, ssid="atsecilthebest", channel=1) :
+    def __init__(self, id=1, localhost=False, port=5555, ssid="atSecil", channel=1) :
         # netwrok
         self.localhost = localhost
         if localhost:
@@ -71,6 +71,7 @@ class AdhocNetwork:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             s.sendto(data, (self._BROADCAST, self._PORT))
+            printl(f"sent <{data}> to {self._BROADCAST}")
 
 
     def read_data(self):

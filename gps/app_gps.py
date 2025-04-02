@@ -29,12 +29,12 @@ class AppMode(Enum):
 #_________________________________ VARS _________________________________
 
 # ___ CONFIG VAR ___
+ID = -1
 APP_MODE = AppMode.LOOPBACK
 NETWORK_MODE = NetworkMode.LOCALHOST
-ID = -1
-SIMU_GPS = False
+ENABLE_SIMU_GPS = True
+ENABLE_DISPLAY = False
 log.PRINT_LOG = False
-DISPLAY = False
 
 PATH_SIZE = 5
 TRUE_SIZE = 10
@@ -62,14 +62,16 @@ def usage():
     usage_text += f"\n OPTIONS :\n"
     usage_text += f" -m <mode> \t app mode in [sender, receiver, loopback]\n"
     usage_text += f" -n <mode> \t network mode in [adhoc, localhost]\n"
-    usage_text += f" -l <value>\t enable log of infos [true,false] "
+    usage_text += f" -l <value>\t enable log of infos [true,false]\n"
+    usage_text += f" -d <value>\t enable display [true,false] (only if using gps simulator)"
     return usage_text
 
 def get_args():
     global ID
     global APP_MODE
     global NETWORK_MODE
-    global SIMU_GPS
+    global ENABLE_SIMU_GPS
+    global ENABLE_DISPLAY
 
     if (len(sys.argv) % 2) == 0:
         warnl("invalid args")
@@ -105,11 +107,18 @@ def get_args():
                 exitl(f"invalid value for network mode : {value}")
         elif opt == "-s":
             if value == "true":
-                SIMU_GPS = True
+                ENABLE_SIMU_GPS = True
             elif value == "false":
-                SIMU_GPS = False
+                ENABLE_SIMU_GPS = False
             else:
                 exitl(f"invalid value for gps simulator : {value}")
+        elif opt == "-d":
+            if value == "true":
+                ENABLE_DISPLAY = True
+            elif value == "false":
+                ENABLE_DISPLAY = False
+            else:
+                exitl(f"invalid value for display : {value}")
         else :
             exitl(f"invalid flag : {opt}")
     
@@ -129,7 +138,7 @@ def display_args():
     printl(f"ID : {ID}")
     printl(f"log : {log.PRINT_LOG}")
 
-#__________________________________ DISPLAY __________________________________
+#__________________________________ ENABLE_DISPLAY __________________________________
 
 def rgb_color(color, text):
     r, g, b = color.astype(int)
@@ -203,12 +212,12 @@ def display(fix, lat, lon, altitude):
 #________________________________ GPS DEVICE ________________________________
 
 
-def gps_simulator() :
+def gps_simulator(simu:GPS_Simulator) :
     try:
         printl("start...")
-        run_simulator()
+        simu.run_simulator()
     except:
-        printl("[gps_simulator] Thread STOP...")
+        printl("Thread STOP...")
 
 def gps_handler(buffer:queue.Queue):
     try:
@@ -224,95 +233,90 @@ def gps_handler(buffer:queue.Queue):
             if line and line[:6] == "$GPGGA":
                 buffer.put(gps_gga_to_coord(line))
     except:
-        printl("[gps_handler] Thread STOP...")
+        printl("Thread STOP...")
 
-def adhoc_sender(network:AdhocNetwork, buffer:queue.Queue):
-    global APP_MODE
-    global DISPLAY
+def network_sender(network:AdhocNetwork, buffer:queue.Queue):
+    global ENABLE_DISPLAY
     try:
         printl("start...")
         while True:
             pos = buffer.get()
-            if not DISPLAY:
-                print(f"[gps_app.adhoc_sender] send pos \t : {pos}")
+            if not ENABLE_DISPLAY:
+                print(f"send pos \t : {pos}")
             pos = json.dumps(pos)
             network.broadcast(pos)
     except:
-        printl("[adhoc_sender] Thread STOP...")
+        printl("Thread STOP...")
 
-def adhoc_receiver(network:AdhocNetwork):
+def network_receiver(network:AdhocNetwork):
     global grid
-    global DISPLAY
+    global ENABLE_DISPLAY
     try:
         printl("start...")
-        if DISPLAY:
+        if ENABLE_DISPLAY:
             grid = create_grid()
             print_grid(grid)
         while True:
             pos = network.read_data()
             (fix, lat, lon, altitude) = json.loads(pos) # (fix, lat, lon, altitude)
             pos = (fix, lat, lon, altitude)
-            printl(f"[gps_app.adhoc_receiver] received pos \t : {pos}")
-            if DISPLAY :
+            printl(f"received pos \t : {pos}")
+            if ENABLE_DISPLAY :
                 display(fix, lat, lon, altitude)
     except:
-        printl("[adhoc_receiver] Thread STOP...")
+        printl("Thread STOP...")
 
 #__________________________________ MAIN __________________________________
 
+# Récupération des arguments
 get_args()
-display_args()
 
-if APP_MODE != AppMode.SENDER and not log.PRINT_LOG and SIMU_GPS == True :
-    DISPLAY = True
-
-network = AdhocNetwork(id=ID, localhost=(NETWORK_MODE == NetworkMode.LOCALHOST))
-network.setup_adhoc()
-
-p_gps_simulator = threading.Thread(target=gps_simulator)
-p_gps_handler = threading.Thread(target=gps_handler, args=(buffer,))
-p_adhoc_sender = threading.Thread(target=adhoc_sender, args=(network,buffer,))
-p_adhoc_receiver = threading.Thread(target=adhoc_receiver, args=(network,))
-
-p_gps_simulator.daemon = True
-p_gps_handler.daemon = True
-p_adhoc_sender.daemon = True
-p_adhoc_receiver.daemon = True
-
+# Vérification de la configuration
+if log.PRINT_LOG and ENABLE_DISPLAY :
+    exitl("Can't enable logger and display at the same time")
 
 
 threads_to_join = []
 
-if APP_MODE == AppMode.SENDER :
-    if SIMU_GPS:
-        p_gps_simulator.start()
-    sleep(1)
-    p_gps_handler.start()
-    p_adhoc_sender.start()
-    
-    if SIMU_GPS:
-        threads_to_join.append(p_gps_simulator)
+# Initialisation du Simulateur GPS
+if ENABLE_SIMU_GPS:
+    print("Start GPS Simulator...")
+    simu = GPS_Simulator()
+    simu.init_simulator()
+    p_gps_simulator = threading.Thread(target=gps_simulator, args=(simu,))
+    p_gps_simulator.daemon = True
+    threads_to_join.append(p_gps_simulator)
+    p_gps_simulator.start()
+
+# Initialisation du réseau
+print("Init network...")
+network = AdhocNetwork(id=ID, localhost=(NETWORK_MODE == NetworkMode.LOCALHOST))
+if NETWORK_MODE == NetworkMode.ADHOC:
+    network.setup_adhoc()
+
+# Lancement threads handler et sender
+if APP_MODE in [AppMode.SENDER, AppMode.LOOPBACK]:
+    print("Start gps handler...")
+    p_gps_handler = threading.Thread(target=gps_handler, args=(buffer,))
+    p_gps_handler.daemon = True
     threads_to_join.append(p_gps_handler)
-    threads_to_join.append(p_adhoc_sender)
-elif APP_MODE == AppMode.RECEIVER :
-    p_adhoc_receiver.start()
-
-    threads_to_join.append(p_adhoc_receiver)
-elif APP_MODE == AppMode.LOOPBACK :
-    if SIMU_GPS:
-        p_gps_simulator.start()
-    sleep(1)
     p_gps_handler.start()
-    p_adhoc_sender.start()
-    p_adhoc_receiver.start()
 
-    if SIMU_GPS:
-        threads_to_join.append(p_gps_simulator)
-    threads_to_join.append(p_adhoc_receiver) 
-    threads_to_join.append(p_gps_handler)
-    threads_to_join.append(p_adhoc_sender)
+    print("Start network sender...")
+    p_network_sender = threading.Thread(target=network_sender, args=(network,buffer,))
+    p_network_sender.daemon = True
+    threads_to_join.append(p_network_sender)
+    p_network_sender.start()
 
+# Lancement thread receiver
+if APP_MODE in [AppMode.RECEIVER, AppMode.LOOPBACK]:
+    print("Start network receiver...")
+    p_network_receiver = threading.Thread(target=network_receiver, args=(network,))
+    p_network_receiver.daemon = True
+    threads_to_join.append(p_network_receiver)
+    p_network_receiver.start()
 
+# Récupération des threads morts
 try:
     for t in threads_to_join:
         t.join()

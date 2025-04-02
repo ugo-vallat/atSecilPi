@@ -8,7 +8,7 @@ fi
 ID=$1
 IP="192.168.1.${ID}"
 MASK="255.255.255.0"
-SSID="atsecilthebest"
+SSID="atSecil"
 CHANNEL=4
 
 # Désactiver le service DHCP pour éviter les conflits

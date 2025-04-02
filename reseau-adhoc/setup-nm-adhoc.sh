@@ -4,7 +4,7 @@ name="adhocAtSecil"
 ip="192.168.1.1/24"
 channel=6
 interface="wlan0"
-ssid="atsecilthebest"
+ssid="atSecil"
 
 echo "Vérification de l'interface Wi-Fi..."
 if ! nmcli device status | grep -q "$interface"; then
